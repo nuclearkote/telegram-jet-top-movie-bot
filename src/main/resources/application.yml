@@ -1,0 +1,7 @@
+telegram:
+  bot:
+    token:<token>
+
+spring:
+  main:
+    web-application-type: none
