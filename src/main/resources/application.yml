@@ -1,6 +1,6 @@
 telegram:
   bot:
-    token:<token>
+    token:${TELEGRAM_BOT_TOKEN}
 
 spring:
   main:

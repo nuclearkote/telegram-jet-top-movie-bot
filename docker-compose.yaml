@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  jet-telegram-bot:
+    container_name: jet-telegram-bot
+    hostname: jet-telegram-bot
+    image: registry.trak.spb.ru/jet-movie-top-bot:latest
+    restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
