@@ -14,22 +14,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @Service
 public class MessageBackupService {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    private final PollsContainerService pollsContainerService;
 
     public void backup(TelegramLongPollingBot bot, Message message) {
-        try {
-            pollsContainerService.saveDb();
-            SendMessage backupMessage = new SendMessage();
-            backupMessage.setChatId(message.getChatId());
-            backupMessage.setText(MAPPER.writeValueAsString(pollsContainerService.getPollsDbList()));
-            bot.execute(backupMessage);
 
-            backupMessage.setText(MAPPER.writeValueAsString(pollsContainerService.getMovieMessagesDbList()));
-            bot.execute(backupMessage);
-        } catch (Exception e) {
-            log.error("Error on backup", e);
-        }
     }
 
 

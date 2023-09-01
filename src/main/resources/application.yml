@@ -1,6 +1,11 @@
 telegram:
   bot:
-    token:${TELEGRAM_BOT_TOKEN}
+    token: ${TELEGRAM_BOT_TOKEN}
+    name: ${TELEGRAM_BOT_NAME}
+
+kinopoisk:
+  url: https://api.kinopoisk.dev
+  token: ${KINOPOISK_TOKEN}
 
 spring:
   main:

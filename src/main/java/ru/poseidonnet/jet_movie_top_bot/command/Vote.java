@@ -1,34 +1,39 @@
-package ru.poseidonnet.jet_movie_top_bot.service;
+package ru.poseidonnet.jet_movie_top_bot.command;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import ru.poseidonnet.jet_movie_top_bot.service.ButtonsService;
+import ru.poseidonnet.jet_movie_top_bot.service.PollsContainerService;
 import ru.poseidonnet.jet_movie_top_bot.utils.ParseUtils;
 
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@Service
-public class PollProcessingService {
+@Component
+public class Vote implements Command {
 
     private final PollsContainerService pollsContainerService;
     private final ButtonsService buttonsService;
 
-    public void processPoll(TelegramLongPollingBot bot, CallbackQuery callbackQuery) {
+    @Override
+    public void process(DefaultAbsSender sender, Update update, String commandArgs) throws Exception {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
         Long userId = callbackQuery.getFrom().getId();
-        String callbackQueryData = callbackQuery.getData();
-        int pollRate = Integer.parseInt(callbackQueryData.substring("vote:".length()));
         Message message = callbackQuery.getMessage();
-        String messageText = message.getText();
-        Integer movieId = ParseUtils.getMovieId(messageText);
+        String[] args = commandArgs.split(";");
+        int pollRate = Integer.parseInt(args[0]);
+        Integer movieId = Integer.parseInt(args[1]);
         Integer messageId = message.getMessageId();
         Long chatId = message.getChatId();
 
@@ -40,12 +45,16 @@ public class PollProcessingService {
 
         buttonsService.reindexButtons(buttons, movieId);
         for (Integer linkedMessageId : pollsContainerService.getLinkedMessages(movieId)) {
-            rebuildButtons(bot, linkedMessageId, chatId, replyMarkup);
+            try {
+                rebuildButtons(sender, linkedMessageId, chatId, replyMarkup);
+            } catch (Exception e) {
+                log.error("Error on rebuilding buttons", e);
+            }
         }
     }
 
 
-    private void rebuildButtons(TelegramLongPollingBot bot, Integer messageId,  Long chatId, InlineKeyboardMarkup replyMarkup) {
+    private void rebuildButtons(DefaultAbsSender bot, Integer messageId, Long chatId, InlineKeyboardMarkup replyMarkup) {
         EditMessageReplyMarkup editMessageReplyMarkup = new EditMessageReplyMarkup();
         editMessageReplyMarkup.setReplyMarkup(replyMarkup);
         editMessageReplyMarkup.setMessageId(messageId);
@@ -57,4 +66,9 @@ public class PollProcessingService {
         }
     }
 
+
+    @Override
+    public String commandType() {
+        return "vote";
+    }
 }

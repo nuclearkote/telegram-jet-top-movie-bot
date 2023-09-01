@@ -36,7 +36,13 @@ public class PollsContainerService {
     }
 
     public void add(Integer movieId, Long userId, int pollRate, Integer messageId) {
-        polls.computeIfAbsent(movieId, k -> new HashMap<>()).put(userId, pollRate);
+        Map<Long, Integer> pollMap = polls.computeIfAbsent(movieId, k -> new HashMap<>());
+        Integer currentRate = pollMap.get(userId);
+        if (currentRate != null && currentRate == pollRate) {
+            pollMap.remove(userId);
+        } else {
+            pollMap.put(userId, pollRate);
+        }
         movieMessages.computeIfAbsent(movieId, k -> new HashSet<>()).add(messageId);
     }
 
