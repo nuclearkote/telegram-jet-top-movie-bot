@@ -7,6 +7,9 @@ kinopoisk:
   url: https://api.kinopoisk.dev
   token: ${KINOPOISK_TOKEN}
 
+backup:
+  path: /usr/local/var/db/db.json
+
 spring:
   main:
     web-application-type: none

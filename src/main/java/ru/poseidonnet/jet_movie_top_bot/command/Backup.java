@@ -15,21 +15,17 @@ import ru.poseidonnet.jet_movie_top_bot.service.PollsContainerService;
 @Component
 public class Backup implements Command {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final PollsContainerService pollsContainerService;
 
     @Override
     public void process(DefaultAbsSender sender, Update update, String commandArgs) throws Exception {
         try {
             Message message = update.getMessage();
-            pollsContainerService.saveDb();
             SendMessage backupMessage = new SendMessage();
             backupMessage.setChatId(message.getChatId());
-            backupMessage.setText(MAPPER.writeValueAsString(pollsContainerService.getPollsDbList()));
+            backupMessage.setText(pollsContainerService.getBackup());
             sender.execute(backupMessage);
-
-            backupMessage.setText(MAPPER.writeValueAsString(pollsContainerService.getMovieMessagesDbList()));
-            sender.execute(backupMessage);
+            pollsContainerService.saveBackup();
         } catch (Exception e) {
             log.error("Error on backup", e);
         }
@@ -39,4 +35,5 @@ public class Backup implements Command {
     public String commandType() {
         return "backup";
     }
+
 }
