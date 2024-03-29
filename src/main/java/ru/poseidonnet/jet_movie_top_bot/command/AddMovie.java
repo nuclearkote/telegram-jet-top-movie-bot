@@ -20,6 +20,8 @@ import java.util.List;
 @Component
 public class AddMovie implements Command {
 
+    @Value("${telegram.bot.name}")
+    private String botName;
     private final ButtonsService buttonsService;
 
     @Override
@@ -54,8 +56,10 @@ public class AddMovie implements Command {
         for (int i = 1; i <= 5; i++) {
             buttons.add(makeInlineKeyboardButton(String.valueOf(i), movieId));
         }
-        buttonsService.reindexButtons(buttons, movieId);
-        inlineKeyboardMarkup.setKeyboard(List.of(buttons));
+        buttonsService.reindexPollButtons(buttons, movieId);
+        InlineKeyboardButton willViewButton = makeWillViewButton(movieId);
+        buttonsService.reindexWillViewButton(willViewButton, movieId);
+        inlineKeyboardMarkup.setKeyboard(List.of(buttons, List.of(willViewButton)));
         return inlineKeyboardMarkup;
     }
 
@@ -64,6 +68,13 @@ public class AddMovie implements Command {
         InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
         inlineKeyboardButton.setText(rate);
         inlineKeyboardButton.setCallbackData("/vote " + rate + ";" + movieId);
+        return inlineKeyboardButton;
+    }
+
+    private InlineKeyboardButton makeWillViewButton(Integer movieId) {
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+        inlineKeyboardButton.setText("Буду посмотреть");
+        inlineKeyboardButton.setCallbackData("/willview@" + botName +" " + movieId);
         return inlineKeyboardButton;
     }
 

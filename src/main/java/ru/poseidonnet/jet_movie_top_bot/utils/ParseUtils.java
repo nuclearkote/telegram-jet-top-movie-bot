@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 @UtilityClass
 public class ParseUtils {
 
-    private static final Pattern MOVIE_ID_PATTERN = Pattern.compile("kinopoisk.ru/film/(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MOVIE_ID_PATTERN = Pattern.compile("kinopoisk.ru/(?:film|series)/(\\d+)", Pattern.CASE_INSENSITIVE);
 
     public static Integer getMovieId(String message) {
         Matcher matcher = MOVIE_ID_PATTERN.matcher(message);

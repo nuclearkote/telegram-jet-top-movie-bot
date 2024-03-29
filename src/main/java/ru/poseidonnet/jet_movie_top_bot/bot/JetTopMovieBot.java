@@ -1,6 +1,7 @@
 package ru.poseidonnet.jet_movie_top_bot.bot;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -50,11 +51,7 @@ public class JetTopMovieBot extends TelegramLongPollingBot {
             String messageText = null;
             if (update.getCallbackQuery() != null) {
                 messageText = update.getCallbackQuery().getData();
-                if (messageText.startsWith("vote:")) {
-                    Integer movieId = ParseUtils.getMovieId(update.getCallbackQuery().getMessage().getText());
-                    messageText = "/vote " + messageText.substring("vote:".length()) + ";" + movieId;
-                }
-
+                messageText = transformCallbackMessage(update, messageText);
             }
             Message message = update.getMessage();
             if (message != null) {
@@ -67,7 +64,7 @@ public class JetTopMovieBot extends TelegramLongPollingBot {
                     waitArgsService.completeFuture(userId, messageText);
                     return;
                 }
-                if (messageText.contains("kinopoisk.ru/film/")) {
+                if (messageText.contains("kinopoisk.ru/film/") || messageText.contains("kinopoisk.ru/series/")) {
                     messageProcessingService.processMovieMessage(this, message);
                     return;
                 }
@@ -90,6 +87,19 @@ public class JetTopMovieBot extends TelegramLongPollingBot {
         } catch (Exception e) {
             log.error("Error on processing update", e);
         }
+    }
+
+    @NotNull
+    private String transformCallbackMessage(Update update, String messageText) {
+        if (messageText.startsWith("vote:")) {
+            Integer movieId = ParseUtils.getMovieId(update.getCallbackQuery().getMessage().getText());
+            messageText = "/vote " + messageText.substring("vote:".length()) + ";" + movieId;
+        }
+        if (messageText.startsWith("willview:")) {
+            Integer movieId = ParseUtils.getMovieId(update.getCallbackQuery().getMessage().getText());
+            messageText = "/vote " + messageText.substring("willview:".length()) + ";" + movieId;
+        }
+        return messageText;
     }
 
     @Override

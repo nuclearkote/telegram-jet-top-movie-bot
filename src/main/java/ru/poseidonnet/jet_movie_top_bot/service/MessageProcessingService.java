@@ -51,9 +51,18 @@ public class MessageProcessingService {
         for (int i = 1; i <= 5; i++) {
             buttons.add(makeInlineKeyboardButton(String.valueOf(i), movieId));
         }
-        buttonsService.reindexButtons(buttons, movieId);
-        inlineKeyboardMarkup.setKeyboard(List.of(buttons));
+        buttonsService.reindexPollButtons(buttons, movieId);
+        List<InlineKeyboardButton> willViewButton = List.of(makeWillViewButton(movieId));
+        inlineKeyboardMarkup.setKeyboard(List.of(buttons, willViewButton));
         return inlineKeyboardMarkup;
+    }
+
+    private InlineKeyboardButton makeWillViewButton(Integer movieId) {
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+        inlineKeyboardButton.setText("Буду посмотреть");
+        inlineKeyboardButton.setCallbackData("/willview@" + botName +" " + movieId);
+        buttonsService.reindexWillViewButton(inlineKeyboardButton, movieId);
+        return inlineKeyboardButton;
     }
 
     @NotNull

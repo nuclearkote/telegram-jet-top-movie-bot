@@ -17,7 +17,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class Vote implements Command {
+public class WillView implements Command {
 
     private final PollsContainerService pollsContainerService;
     private final ButtonsService buttonsService;
@@ -27,19 +27,20 @@ public class Vote implements Command {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         Long userId = callbackQuery.getFrom().getId();
         Message message = callbackQuery.getMessage();
-        String[] args = commandArgs.split(";");
-        int pollRate = Integer.parseInt(args[0]);
-        Integer movieId = Integer.parseInt(args[1]);
-        Integer messageId = message.getMessageId();
+        int movieId = Integer.parseInt(commandArgs);
         Long chatId = message.getChatId();
 
-        pollsContainerService.add(movieId, userId, pollRate, messageId);
+        pollsContainerService.addWillView(userId, movieId, message.getMessageId());
 
         InlineKeyboardMarkup replyMarkup = message.getReplyMarkup();
         List<List<InlineKeyboardButton>> keyboard = replyMarkup.getKeyboard();
-        List<InlineKeyboardButton> buttons = keyboard.get(0);
+        if (keyboard.size() < 2) {
+            return;
+        }
+        List<InlineKeyboardButton> buttons = keyboard.get(1);
+        InlineKeyboardButton willViewButton = buttons.get(0);
 
-        buttonsService.reindexPollButtons(buttons, movieId);
+        buttonsService.reindexWillViewButton(willViewButton, movieId);
         for (Integer linkedMessageId : pollsContainerService.getLinkedMessages(movieId)) {
             try {
                 buttonsService.changeButtons(sender, linkedMessageId, chatId, replyMarkup);
@@ -47,11 +48,12 @@ public class Vote implements Command {
                 log.error("Error on rebuilding buttons", e);
             }
         }
-    }
 
+    }
 
     @Override
     public String commandType() {
-        return "vote";
+        return "willview";
     }
+
 }

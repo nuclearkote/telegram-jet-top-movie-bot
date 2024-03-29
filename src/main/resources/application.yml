@@ -10,6 +10,3 @@ kinopoisk:
 backup:
   path: /usr/local/var/db/db.json
 
-spring:
-  main:
-    web-application-type: none

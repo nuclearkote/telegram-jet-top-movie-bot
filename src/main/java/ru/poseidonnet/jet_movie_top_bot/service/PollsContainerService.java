@@ -78,6 +78,30 @@ public class PollsContainerService {
         return backup.getPolls();
     }
 
+    public void addWillView(long userId, int movieId, Integer messageId) {
+        Set<Integer> movies = backup.getWillView().computeIfAbsent(userId, k -> new HashSet<>());
+        if (movies.contains(movieId)) {
+            movies.remove(movieId);
+        } else {
+            movies.add(movieId);
+        }
+        backup.getMovieMessages().computeIfAbsent(movieId, k -> new HashSet<>()).add(messageId);
+    }
+
+    public Set<Integer> getWillView(long userId) {
+        return backup.getWillView().containsKey(userId) ? backup.getWillView().get(userId) : new HashSet<>();
+    }
+
+    public int countWillView(int movieId) {
+        int count = 0;
+        for (Set<Integer> movies : backup.getWillView().values()) {
+            if (movies.contains(movieId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     @SneakyThrows
     @Scheduled(fixedRate = 60_000, initialDelay = 60_000)
     public synchronized void saveBackup() {
@@ -90,6 +114,8 @@ public class PollsContainerService {
 
         private Map<Integer, Set<Integer>> movieMessages = new HashMap<>();
         private Map<Integer, Map<Long, Integer>> polls = new HashMap<>();
+        //user - movie
+        private Map<Long, Set<Integer>> willView = new HashMap<>();
 
     }
 

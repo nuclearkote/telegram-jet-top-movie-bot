@@ -20,11 +20,7 @@ public class Backup implements Command {
     @Override
     public void process(DefaultAbsSender sender, Update update, String commandArgs) throws Exception {
         try {
-            Message message = update.getMessage();
-            SendMessage backupMessage = new SendMessage();
-            backupMessage.setChatId(message.getChatId());
-            backupMessage.setText(pollsContainerService.getBackup());
-            sender.execute(backupMessage);
+            sendMessage(sender, update, pollsContainerService.getBackup());
             pollsContainerService.saveBackup();
         } catch (Exception e) {
             log.error("Error on backup", e);

@@ -12,10 +12,17 @@ public interface Command {
 
     @SneakyThrows
     default void sendMessage(DefaultAbsSender sender, Update update, String text) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(update.getMessage().getChatId());
-        sendMessage.setText(text);
-        sender.execute(sendMessage);
+        int cursor = 0;
+        int pageSize = 4096;
+        do {
+            String substring = text.substring(cursor, Math.min(cursor + pageSize, text.length()));
+
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(update.getMessage().getChatId());
+            sendMessage.setText(substring);
+            sender.execute(sendMessage);
+            cursor += pageSize;
+        } while (cursor < text.length());
     }
 
     @SneakyThrows
