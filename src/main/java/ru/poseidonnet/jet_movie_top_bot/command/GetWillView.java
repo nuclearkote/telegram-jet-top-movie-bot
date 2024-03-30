@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import ru.poseidonnet.jet_movie_top_bot.kinopoisk.model.KinopoiskResponse;
 import ru.poseidonnet.jet_movie_top_bot.service.MovieLinkCacheService;
 import ru.poseidonnet.jet_movie_top_bot.service.PollsContainerService;
@@ -30,20 +32,17 @@ public class GetWillView implements Command {
             sendMessage(sender, update, "Вы не добавили ни одного фильма.");
             return;
         }
-        StringBuilder sb = new StringBuilder();
         Map<Integer, KinopoiskResponse.Movie> links = movieLinkCacheService.getByIds(willView);
-        sb.append("Ваши избранные фильмы:\n");
-        for (int i = 0; i < willView.size(); i++) {
-            Integer movieId = willView.get(i);
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        for (int i = 0 ; i < willView.size(); i++) {
+            int movieId = willView.get(i);
+            InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
             KinopoiskResponse.Movie movie = links.get(movieId);
-            String filmPart = (i + 1) + ") " + FormatUtils.formatMovie(movie) + "\n";
-            if (sb.length() + filmPart.length() > 4096) {
-                sendHtmlMessage(sender, update, sb.toString());
-                sb.setLength(0);
-            }
-            sb.append(filmPart);
+            inlineKeyboardButton.setText((i + 1) + ") "+ movie.getName() + " (" + movie.getYear() + ")");
+            inlineKeyboardButton.setCallbackData("/addMovie " + movie.getId() + ";" + update.getMessage().getFrom().getId());
+            buttons.add(List.of(inlineKeyboardButton));
         }
-        sendHtmlMessage(sender, update, sb.toString());
+        sendButtons(sender, update, "Ваши избранные фильмы:\n", buttons);
     }
 
     @Override

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import ru.poseidonnet.jet_movie_top_bot.kinopoisk.model.KinopoiskResponse;
 import ru.poseidonnet.jet_movie_top_bot.service.MovieLinkCacheService;
 import ru.poseidonnet.jet_movie_top_bot.service.PollsContainerService;
@@ -26,19 +27,22 @@ public class MostRated implements Command {
         Map<Integer, Map<Long, Integer>> polls = pollsContainerService.getPolls();
         List<Integer> mostRatedList = new ArrayList<>(polls.keySet().stream().toList());
         mostRatedList.sort(Comparator.comparingInt(o -> -polls.get(o).size()));
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("<b>Топ10 наиболее оцениваемых фильмов</b>\n");
+        mostRatedList = mostRatedList.stream().limit(10).toList();
         Map<Integer, KinopoiskResponse.Movie> links = movieLinkCacheService.getByIds(mostRatedList);
-        for (int i = 0; i < mostRatedList.size() && i < 10; i++) {
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        for (int i = 0; i < mostRatedList.size(); i++) {
             Integer movieId = mostRatedList.get(i);
-            sb.append(i + 1).append(") ")
-                    .append(FormatUtils.formatMovie(links.get(movieId)))
-                    .append("\nПроголосовало - ")
-                    .append(polls.get(movieId).size())
-                    .append("\n");
+            InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+            KinopoiskResponse.Movie movie = links.get(movieId);
+            inlineKeyboardButton.setText((i + 1) + ") " +
+                    movie.getName() +
+                    " (" + movie.getYear() + ")" +
+                    "\nПроголосовало - " + polls.get(movieId).size()
+            );
+            inlineKeyboardButton.setCallbackData("/addMovie " + movie.getId() + ";" + update.getMessage().getFrom().getId());
+            buttons.add(List.of(inlineKeyboardButton));
         }
-        sendHtmlMessage(sender, update, sb.toString());
+        sendButtons(sender, update, "Топ10 наиболее оцениваемых фильмов\n", buttons);
     }
 
     @Override

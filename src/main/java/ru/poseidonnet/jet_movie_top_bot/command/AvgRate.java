@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.DefaultAbsSender;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import ru.poseidonnet.jet_movie_top_bot.kinopoisk.model.KinopoiskResponse;
 import ru.poseidonnet.jet_movie_top_bot.service.MovieLinkCacheService;
 import ru.poseidonnet.jet_movie_top_bot.service.PollsContainerService;
@@ -25,31 +26,35 @@ public class AvgRate implements Command {
     @Override
     public void process(DefaultAbsSender sender, Update update, String commandArgs) {
         Map<Integer, Map<Long, Integer>> polls = pollsContainerService.getPolls();
-        List<Integer> avgRatedList = new ArrayList<>(polls.keySet().stream().toList());
+        List<Integer> avgRatedList = new ArrayList<>(polls.keySet().stream()
+                .filter(k -> polls.get(k).size() > 1)
+                .toList());
         Map<Integer, Float> avgResultsMap = polls.entrySet()
                 .stream()
+                .filter(e -> e.getValue().size() > 1)
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> (float) entry.getValue().values().stream().mapToInt(i -> i).sum() / entry.getValue().size()));
 
-        avgRatedList.sort(Comparator.comparingDouble(o -> -avgResultsMap.get(o)));
+        avgRatedList.sort(Comparator.comparingDouble(o -> -avgResultsMap.get(o))
+                .thenComparingInt(mid -> -polls.get(mid).size()));
         avgRatedList = avgRatedList.stream().limit(10).toList();
 
-        StringBuilder sb = new StringBuilder();
-
         Map<Integer, KinopoiskResponse.Movie> links = movieLinkCacheService.getByIds(avgRatedList);
-        sb.append("Топ10 фильмов с наибольшим средним рейтингом\n");
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         for (int i = 0; i < avgRatedList.size(); i++) {
-            Integer movieId = avgRatedList.get(i);
+            int movieId = avgRatedList.get(i);
+            InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
             KinopoiskResponse.Movie movie = links.get(movieId);
-            sb.append(i + 1).append(") ")
-                    .append(FormatUtils.formatMovie(movie))
-                    .append("\nПроголосовало - ")
-                    .append(polls.get(movieId).size())
-                    .append("\nРейтинг - ")
-                    .append(avgResultsMap.get(movieId))
-                    .append("\n");
+            inlineKeyboardButton.setText((i + 1) + ") " +
+                    movie.getName() +
+                    " (" + movie.getYear() + ")" +
+                    "\nПроголосовало - " + polls.get(movieId).size()
+                    + "\nРейтинг - " + avgResultsMap.get(movieId)
+            );
+            inlineKeyboardButton.setCallbackData("/addMovie " + movie.getId() + ";" + update.getMessage().getFrom().getId());
+            buttons.add(List.of(inlineKeyboardButton));
         }
-        sendHtmlMessage(sender, update, sb.toString());
+        sendButtons(sender, update, "Топ10 фильмов с наибольшим средним рейтингом\n", buttons);
     }
 
     @Override
