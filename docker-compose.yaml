@@ -12,3 +12,9 @@ services:
       - TELEGRAM_BOT_NAME=${TELEGRAM_BOT_NAME}
     volumes:
       - /home/app/:/usr/local/var/db/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
