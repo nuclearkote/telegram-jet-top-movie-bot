@@ -65,7 +65,7 @@ public interface Command {
         }
         if (batch.size() > 0) {
             InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-            inlineKeyboardMarkup.setKeyboard(buttons);
+            inlineKeyboardMarkup.setKeyboard(batch);
             sendMessage.setReplyMarkup(inlineKeyboardMarkup);
             sender.execute(sendMessage);
         }
